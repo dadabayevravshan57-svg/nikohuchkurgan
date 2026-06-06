@@ -161,12 +161,13 @@
           </div>
           <div class="f">
             <label>Tuman *</label>
-            <select id="tuman">
+            <select id="tuman" onchange="onTumanChange(this.value)">
               <option value="Uchqo'rg'on tumani">Uchqo'rg'on tumani</option>
             </select>
           </div>
           <div class="f">
             <label>MFY *</label>
+            <input id="mfyInput" type="text" placeholder="MFY nomini yozing" style="display:none">
             <select id="mfy">
               <option value="">— Tanlang —</option>
               <option>Chek</option><option>Ulug'bek</option><option>Yoshlik</option>
@@ -350,10 +351,26 @@ function onViloyatChange(val){
     if(t === "Uchqo'rg'on tumani") opt.selected = true;
     tumanSel.appendChild(opt);
   });
+  onTumanChange(tumanSel.value);
+}
+
+function onTumanChange(val){
+  const mfySel = document.getElementById('mfy');
+  const mfyInp = document.getElementById('mfyInput');
+  if(val === "Uchqo'rg'on tumani"){
+    if(mfySel) mfySel.style.display = '';
+    if(mfyInp) mfyInp.style.display = 'none';
+  } else {
+    if(mfySel) mfySel.style.display = 'none';
+    if(mfyInp) mfyInp.style.display = '';
+  }
 }
 
 // Init tumanlar on load
-window.addEventListener('load', ()=>{ onViloyatChange("Namangan viloyati"); });
+window.addEventListener('load', ()=>{ 
+  onViloyatChange("Namangan viloyati"); 
+  onTumanChange("Uchqo'rg'on tumani");
+});
 
 function jshshirAutoFill(val){
   const hint = document.getElementById('jshshirHint');
@@ -556,6 +573,8 @@ function clearForm(){
   });
   document.getElementById('jinsi').value='';
   document.getElementById('mfy').value='';
+  document.getElementById('mfyInput').value='';
+  onTumanChange("Uchqo'rg'on tumani");
   document.getElementById('murojatSana').value=new Date().toISOString().split('T')[0];
   const saveBtn=document.getElementById('saveBtn');
   delete saveBtn.dataset.editId;
@@ -577,7 +596,16 @@ async function editRecord(id){
   document.getElementById('sharif').value=r.sharif||'';
   document.getElementById('tugilganYil').value=r.tugilgan_sana||r.tugilgan_yil||'';
   document.getElementById('jinsi').value=r.jinsi||'';
-  document.getElementById('mfy').value=r.mfy||'';
+  const mfySel=document.getElementById('mfy');
+  const mfyInp=document.getElementById('mfyInput');
+  const tuman=r.tuman||"Uchqo'rg'on tumani";
+  if(tuman==="Uchqo'rg'on tumani"){
+    mfySel.style.display=''; mfyInp.style.display='none';
+    mfySel.value=r.mfy||'';
+  } else {
+    mfySel.style.display='none'; mfyInp.style.display='';
+    mfyInp.value=r.mfy||'';
+  }
   document.getElementById('jshshir').value=r.jshshir||'';
   document.getElementById('yollanma').value=r.yollanma||'';
   document.getElementById('telefon').value=r.telefon||'';
