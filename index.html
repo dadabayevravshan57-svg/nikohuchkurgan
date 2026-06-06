@@ -272,7 +272,7 @@
           <option>Erkak</option>
           <option>Ayol</option>
         </select>
-        <button id="excelBtn" style="display:none;background:#1a7a4a;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer" onclick="exportExcel()">📥 Excel</button>
+        <button id="excelBtn" style="background:#1a7a4a;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer" onclick="exportExcel()">📥 Excel yuklab olish</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
         <div class="tbl-wrap">
@@ -422,10 +422,8 @@ function initApp(){
   document.getElementById('appWrap').style.display='block';
   document.getElementById('roleBadge').textContent = currentRole==='admin'?'👑 Admin':'👤 Xodim';
   const isAdmin = currentRole==='admin';
-  ['excelBtn','hisobotBtn'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display = isAdmin?'':'none';
-  });
+  const hisobotEl=document.getElementById('hisobotBtn');
+  if(hisobotEl) hisobotEl.style.display = isAdmin?'':'none';
   loadRecords();
   // Set today as murojat sana
   document.getElementById('murojatSana').value = new Date().toISOString().split('T')[0];
