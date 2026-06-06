@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nikohlanuvchilar Tibbiy Ko'rik Tizimi</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh}
+
+  /* LOGIN */
+  .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a5276 0%,#0e3460 100%)}
+  .login-card{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center}
+  .login-card .logo{font-size:48px;margin-bottom:12px}
+  .login-card h2{color:#1a5276;font-size:18px;margin-bottom:4px}
+  .login-card p{color:#666;font-size:12px;margin-bottom:24px}
+  .role-btns{display:flex;gap:8px;margin-bottom:16px}
+  .role-btn{flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;transition:.2s}
+  .role-btn.active{border-color:#1a5276;background:#1a5276;color:#fff}
+  .login-card input{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none}
+  .login-card input:focus{border-color:#1a5276}
+  .btn-login{width:100%;padding:13px;background:#1a5276;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer}
+  .btn-login:hover{background:#154360}
+  .login-err{color:#e74c3c;font-size:12px;margin-top:8px;display:none}
+
+  /* APP */
+  .app{display:none}
+  .topbar{background:linear-gradient(90deg,#1a5276,#0e3460);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar h1{font-size:14px;font-weight:700;line-height:1.3}
+  .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(255,255,255,0.2)}
+  .btn-out{padding:6px 14px;background:#e74c3c;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer}
+
+  .tabs{background:#fff;border-bottom:2px solid #e8ecf0;display:flex;padding:0 16px;gap:4px}
+  .tab{padding:12px 18px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tab.active{color:#1a5276;border-bottom-color:#1a5276}
+
+  .content{padding:16px;max-width:1400px;margin:0 auto}
+
+  /* CARD */
+  .card{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+  .section-title{font-size:12px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid #f0f0f0;text-transform:uppercase;letter-spacing:.5px}
+
+  /* FORM */
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:12px}
+  .f{display:flex;flex-direction:column;gap:4px}
+  .f.full{grid-column:1/-1}
+  .f label{font-size:11px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.3px}
+  .f input,.f select{padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;transition:.2s;background:#fff}
+  .f input:focus,.f select:focus{border-color:#1a5276;box-shadow:0 0 0 3px rgba(26,82,118,0.1)}
+  .f input:disabled,.f select:disabled{background:#f5f5f5;opacity:0.5;cursor:not-allowed}
+
+  .btn-save{background:#1a5276;color:#fff;border:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+  .btn-save:hover{background:#154360}
+  .btn-save:disabled{opacity:0.5;cursor:not-allowed}
+  .btn-clear{background:#fff;color:#666;border:1.5px solid #ddd;padding:11px 20px;border-radius:8px;font-size:13px;cursor:pointer}
+
+  /* SEARCH & FILTER */
+  .toolbar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+  .toolbar input{flex:1;min-width:200px;padding:9px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none}
+  .toolbar input:focus{border-color:#1a5276}
+  .toolbar select{padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none}
+
+  /* TABLE */
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1a5276;color:#fff;padding:10px 8px;text-align:left;white-space:nowrap;font-size:11px}
+  td{padding:9px 8px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+  tr:hover td{background:#f8fafc}
+  .badge-erkak{background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+  .badge-ayol{background:#fce4ec;color:#c62828;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+
+  /* BUTTONS */
+  .btn-edit{background:#f39c12;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600}
+  .btn-del{background:#e74c3c;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;margin-left:4px}
+
+  /* ALERT */
+  .alert{position:fixed;top:16px;right:16px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;display:none;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+  .alert.ok{background:#27ae60;color:#fff}
+  .alert.err{background:#e74c3c;color:#fff}
+  .alert.info{background:#2980b9;color:#fff}
+
+  /* COUNT BOX */
+  .count-box{background:#fff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#555;border:1px solid #e8ecf0}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+  .stat-n{font-size:28px;font-weight:800;color:#1a5276}
+  .stat-l{font-size:11px;color:#888;margin-top:4px}
+
+  /* JSHSHIR HINT */
+  #jshshirHint{font-size:11px;min-height:16px;margin-top:2px}
+
+  .empty{text-align:center;padding:40px;color:#aaa;display:none}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="logo">💍</div>
+    <h2>Nikohlanuvchilar</h2>
+    <p>Uchqo'rg'on tumani tibbiy ko'rik tizimi</p>
+    <div class="role-btns">
+      <button class="role-btn active" onclick="setRole('xodim',this)">👤 Xodim</button>
+      <button class="role-btn" onclick="setRole('admin',this)">🔐 Admin</button>
+    </div>
+    <input type="password" id="loginPass" placeholder="Parolni kiriting" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">Kirish →</button>
+    <div class="login-err" id="loginErr">Parol noto'g'ri!</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appWrap">
+  <div class="topbar">
+    <div>
+      <h1>💍 Uchqo'rg'on tumani nikohlanuvchilar tibbiy ko'rik tizimi</h1>
+      <span style="font-size:11px;color:#a8c8f0">⚕️ Tizim muallifi: Davolash ishlari bo'yicha boshliq o'rinbosari | Dadabayev R.M</span>
+    </div>
+    <div class="topbar-right">
+      <span class="badge" id="roleBadge">Xodim</span>
+      <button class="btn-out" onclick="doLogout()">🚪 Chiqish</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('form')">➕ Yangi qo'shish</button>
+    <button class="tab" onclick="showTab('list')">📋 Ro'yxat</button>
+    <button class="tab" onclick="showTab('stats')">📊 Statistika</button>
+  </div>
+
+  <div class="content">
+
+    <!-- FORM TAB -->
+    <div id="tabForm">
+      <div class="card">
+        <div class="section-title">👤 Shaxsiy ma'lumotlar</div>
+        <div class="form-grid">
+          <div class="f">
+            <label>Familya *</label>
+            <input id="familya" type="text" placeholder="Familya">
+          </div>
+          <div class="f">
+            <label>Ism *</label>
+            <input id="ism" type="text" placeholder="Ism">
+          </div>
+          <div class="f">
+            <label>Sharif *</label>
+            <input id="sharif" type="text" placeholder="Sharif">
+          </div>
+          <div class="f">
+            <label>Tug'ilgan yili *</label>
+            <input id="tugilganYil" type="number" placeholder="1990" min="1900" max="2010">
+          </div>
+          <div class="f">
+            <label>Jinsi *</label>
+            <select id="jinsi">
+              <option value="">— Tanlang —</option>
+              <option>Erkak</option>
+              <option>Ayol</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>MFY *</label>
+            <select id="mfy">
+              <option value="">— Tanlang —</option>
+              <option>Chek</option><option>Ulug'bek</option><option>Yoshlik</option>
+              <option>Ko'g'ay</option><option>Islomobod</option><option>Uchyog'och</option>
+              <option>Navro'z</option><option>Nurobod</option><option>Namuna</option>
+              <option>Birlik</option><option>Shahrihonchek</option><option>Ko'g'ay o'lmas</option>
+              <option>Yorqinboychek</option><option>Bahriyobod</option><option>Obod</option>
+              <option>Ozod</option><option>Yangiobod</option><option>Norin</option>
+              <option>Navbahor</option><option>Istiqlol</option><option>Yopisxon</option>
+              <option>Katta Chek</option><option>Qozoqovul</option><option>Baxt</option>
+              <option>Xalfato'pi</option><option>Yashiq</option><option>Eshonto'pi</option>
+              <option>Atlas</option><option>Elatan</option><option>Ko'chaboshi</option>
+              <option>Yangiyer</option><option>Guliston</option><option>Bo'ston</option>
+              <option>Yog'du</option><option>Dehqonobod</option><option>Mehnatobod</option>
+              <option>Uchko'prik</option><option>Paxtachi</option><option>Qo'rg'oncha</option>
+              <option>Madaniyat</option><option>Ko'prikboshi</option><option>Qumto'g'on</option>
+              <option>Sohil</option><option>O'rdabog'</option><option>Turkiston</option>
+              <option>Yorqin hayot</option><option>Sanoat</option><option>Farg'ona</option>
+              <option>Shodlik</option><option>Fayziobod</option><option>Oqtovliq</option>
+              <option>Navoiy</option><option>Farovon</option><option>Sholdirma</option>
+              <option>Mustaqillik</option><option>Tegirmon</option><option>Kattamo'g'ol</option>
+              <option>Tinchlik</option><option>Istiqbol</option><option>Yangi hayot</option><option>Qurama</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>JSHSHIR * (14 raqam)</label>
+            <input id="jshshir" type="text" placeholder="00000000000000" maxlength="14"
+              oninput="this.value=this.value.replace(/\D/g,'')">
+          </div>
+          <div class="f">
+            <label>FXDYO Yo'llanma T/N</label>
+            <input id="yollanma" type="text" placeholder="Yo'llanma raqami">
+          </div>
+          <div class="f">
+            <label>Telefon raqam</label>
+            <input id="telefon" type="text" placeholder="+998901234567">
+          </div>
+          <div class="f">
+            <label>Murojat qilingan sana</label>
+            <input id="murojatSana" type="date">
+          </div>
+          <div class="f">
+            <label>Yakunlangan sana</label>
+            <input id="yakunSana" type="date">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn-save" id="saveBtn" onclick="saveRecord()">💾 Saqlash</button>
+          <button class="btn-clear" onclick="clearForm()">🗑 Tozalash</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST TAB -->
+    <div id="tabList" style="display:none">
+      <div class="count-box" id="countBox">📊 Yuklanmoqda...</div>
+      <div class="toolbar">
+        <input id="srch" placeholder="🔍 Familya, JSHSHIR, MFY..." oninput="renderTable()">
+        <select id="fltMfy" onchange="renderTable()">
+          <option value="">Barcha MFYlar</option>
+          <option>Chek</option><option>Ulug'bek</option><option>Yoshlik</option>
+          <option>Ko'g'ay</option><option>Baxt</option><option>Paxtachi</option>
+          <option>O'rdabog'</option><option>Yangi hayot</option>
+        </select>
+        <select id="fltJinsi" onchange="renderTable()">
+          <option value="">Erkak va Ayol</option>
+          <option>Erkak</option>
+          <option>Ayol</option>
+        </select>
+        <button id="excelBtn" style="display:none;background:#1a7a4a;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer" onclick="exportExcel()">📥 Excel</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>F.I.Sh</th>
+                <th>Tug'ilgan yili</th>
+                <th>Jinsi</th>
+                <th>MFY</th>
+                <th>JSHSHIR</th>
+                <th>Yo'llanma T/N</th>
+                <th>Telefon</th>
+                <th>Murojat sanasi</th>
+                <th>Yakunlangan sana</th>
+                <th>Amal</th>
+              </tr>
+            </thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="emptyMsg">📭 Ma'lumot topilmadi</div>
+      </div>
+    </div>
+
+    <!-- STATS TAB -->
+    <div id="tabStats" style="display:none">
+      <div style="margin-bottom:12px">
+        <button id="hisobotBtn" style="display:none;background:#1a7a4a;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer" onclick="exportHisobot()">📊 Hisobot Excel</button>
+      </div>
+      <div id="statsContent"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="alert" id="alertBox"></div>
+
+<script>
+const SB_URL = 'https://odqakxaxbeqnjabckhci.supabase.co';
+const SB_KEY = 'sb_publishable_QRiasrkkjMElDmwkAaYxzw_2FbtHU5Z';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let PASS_XODIM = 'nikoh2026';
+let PASS_ADMIN = 'admin2026';
+const ZAPAS = 'R_993276013ser';
+let currentRole = '';
+let allRecords = [];
+let loginType = 'xodim';
+
+function setRole(r, el){
+  loginType = r;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function doLogin(){
+  const pass = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginErr');
+  if(pass === ZAPAS){ currentRole=loginType; initApp(); return; }
+  try{ await loadPasswords(); } catch(e){}
+  if(loginType==='xodim' && pass===PASS_XODIM){ currentRole='xodim'; initApp(); }
+  else if(loginType==='admin' && pass===PASS_ADMIN){ currentRole='admin'; initApp(); }
+  else { errEl.style.display='block'; setTimeout(()=>errEl.style.display='none',3000); }
+}
+
+async function loadPasswords(){
+  const {data} = await sb.from('nikoh_sozlamalar').select('*').in('kalit',['xodim_parol','admin_parol']);
+  if(data) data.forEach(d=>{
+    if(d.kalit==='xodim_parol') PASS_XODIM=d.qiymat;
+    if(d.kalit==='admin_parol') PASS_ADMIN=d.qiymat;
+  });
+}
+
+function initApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  document.getElementById('roleBadge').textContent = currentRole==='admin'?'👑 Admin':'👤 Xodim';
+  const isAdmin = currentRole==='admin';
+  ['excelBtn','hisobotBtn'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = isAdmin?'':'none';
+  });
+  loadRecords();
+  // Set today as murojat sana
+  document.getElementById('murojatSana').value = new Date().toISOString().split('T')[0];
+}
+
+function doLogout(){
+  currentRole='';
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('loginPass').value='';
+}
+
+function showTab(t){
+  ['tabForm','tabList','tabStats'].forEach(id=>document.getElementById(id).style.display='none');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display='block';
+  event.target.classList.add('active');
+  if(t==='stats') renderStats();
+  if(t==='list') renderTable();
+}
+
+function gv(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+
+function showAlert(msg, type){
+  const el=document.getElementById('alertBox');
+  el.textContent=msg; el.className='alert '+type; el.style.display='block';
+  setTimeout(()=>el.style.display='none',3000);
+}
+
+async function loadRecords(){
+  allRecords=[];
+  let from=0;
+  while(true){
+    const {data,error}=await sb.from('nikoh_bemorlar')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .range(from,from+999);
+    if(error||!data||!data.length) break;
+    allRecords=allRecords.concat(data);
+    if(data.length<1000) break;
+    from+=1000;
+  }
+  renderTable();
+  updateCount();
+}
+
+function updateCount(){
+  const el=document.getElementById('countBox');
+  if(el) el.innerHTML=`📊 Jami: <strong>${allRecords.length}</strong> ta &nbsp;|&nbsp; 
+    👨 Erkak: <strong>${allRecords.filter(r=>r.jinsi==='Erkak').length}</strong> ta &nbsp;|&nbsp; 
+    👩 Ayol: <strong>${allRecords.filter(r=>r.jinsi==='Ayol').length}</strong> ta &nbsp;|&nbsp; 
+    ✅ Yakunlangan: <strong>${allRecords.filter(r=>r.yakun_sana).length}</strong> ta`;
+}
+
+let _filtered=[], _page=0;
+const PAGE=100;
+
+function renderTable(){
+  const q=gv('srch').toLowerCase();
+  const fm=gv('fltMfy');
+  const jn=gv('fltJinsi');
+  _filtered=allRecords.filter(r=>{
+    const mQ=!q||[r.familya,r.ism,r.sharif,r.jshshir,r.mfy,r.yollanma,r.telefon].join(' ').toLowerCase().includes(q);
+    return mQ&&(!fm||r.mfy===fm)&&(!jn||r.jinsi===jn);
+  });
+  _page=0;
+  renderPage();
+}
+
+function renderPage(){
+  const body=document.getElementById('tblBody');
+  const empty=document.getElementById('emptyMsg');
+  if(!_filtered.length){body.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const slice=_filtered.slice(_page*PAGE,(_page+1)*PAGE);
+  body.innerHTML=slice.map((r,i)=>`
+    <tr>
+      <td>${_page*PAGE+i+1}</td>
+      <td><strong>${r.familya||''} ${r.ism||''}</strong><br><small style="color:#888">${r.sharif||''}</small></td>
+      <td>${r.tugilgan_yil||'—'}</td>
+      <td><span class="badge-${r.jinsi==='Erkak'?'erkak':'ayol'}">${r.jinsi||'—'}</span></td>
+      <td style="font-size:11px">${r.mfy||'—'}</td>
+      <td style="font-size:11px;font-family:monospace">${r.jshshir||'—'}</td>
+      <td style="font-size:11px">${r.yollanma||'—'}</td>
+      <td style="font-size:11px">${r.telefon||'—'}</td>
+      <td style="font-size:11px">${r.murojat_sana?fd(r.murojat_sana):'—'}</td>
+      <td style="font-size:11px">${r.yakun_sana?fd(r.yakun_sana):'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-edit" onclick="editRecord('${r.id}')">✏️</button>
+        ${currentRole==='admin'?`<button class="btn-del" onclick="deleteRecord('${r.id}')">🗑</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function fd(d){ if(!d)return'—'; const p=d.split('-'); return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:d; }
+
+async function saveRecord(){
+  const req=['familya','ism','sharif','tugilganYil','jinsi','mfy'];
+  for(const id of req){
+    if(!gv(id)){showAlert("❌ Majburiy maydonlarni to'ldiring!",'err');document.getElementById(id).focus();return;}
+  }
+  if(gv('jshshir') && gv('jshshir').length!==14){
+    showAlert('JSHSHIR 14 ta raqam bo\'lishi kerak!','err');return;
+  }
+
+  const rec={
+    familya:gv('familya'), ism:gv('ism'), sharif:gv('sharif'),
+    tugilgan_yil:parseInt(gv('tugilganYil'))||null,
+    jinsi:gv('jinsi'), mfy:gv('mfy'),
+    jshshir:gv('jshshir')||null,
+    yollanma:gv('yollanma')||null,
+    telefon:gv('telefon')||null,
+    murojat_sana:gv('murojatSana')||null,
+    yakun_sana:gv('yakunSana')||null,
+  };
+
+  const saveBtn=document.getElementById('saveBtn');
+  const editId=saveBtn.dataset.editId;
+
+  if(editId){
+    const {error}=await sb.from('nikoh_bemorlar').update(rec).eq('id',editId);
+    if(error){showAlert('Xatolik: '+error.message,'err');return;}
+    showAlert('✅ Muvaffaqiyatli yangilandi!','ok');
+    delete saveBtn.dataset.editId;
+    saveBtn.textContent='💾 Saqlash';
+    saveBtn.style.background='#1a5276';
+  } else {
+    const {error}=await sb.from('nikoh_bemorlar').insert([rec]);
+    if(error){showAlert('Xatolik: '+error.message,'err');return;}
+    showAlert('✅ Muvaffaqiyatli saqlandi!','ok');
+  }
+  clearForm();
+  await loadRecords();
+}
+
+function clearForm(){
+  ['familya','ism','sharif','tugilganYil','jshshir','yollanma','telefon','yakunSana'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('jinsi').value='';
+  document.getElementById('mfy').value='';
+  document.getElementById('murojatSana').value=new Date().toISOString().split('T')[0];
+  const saveBtn=document.getElementById('saveBtn');
+  delete saveBtn.dataset.editId;
+  saveBtn.textContent='💾 Saqlash';
+  saveBtn.style.background='#1a5276';
+}
+
+async function editRecord(id){
+  const r=allRecords.find(x=>x.id===id);
+  if(!r)return;
+  showTab('form');
+  document.querySelectorAll('.tab')[0].click();
+  document.getElementById('familya').value=r.familya||'';
+  document.getElementById('ism').value=r.ism||'';
+  document.getElementById('sharif').value=r.sharif||'';
+  document.getElementById('tugilganYil').value=r.tugilgan_yil||'';
+  document.getElementById('jinsi').value=r.jinsi||'';
+  document.getElementById('mfy').value=r.mfy||'';
+  document.getElementById('jshshir').value=r.jshshir||'';
+  document.getElementById('yollanma').value=r.yollanma||'';
+  document.getElementById('telefon').value=r.telefon||'';
+  document.getElementById('murojatSana').value=r.murojat_sana||'';
+  document.getElementById('yakunSana').value=r.yakun_sana||'';
+  const saveBtn=document.getElementById('saveBtn');
+  saveBtn.dataset.editId=id;
+  saveBtn.textContent='💾 Yangilash';
+  saveBtn.style.background='#e67e22';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function deleteRecord(id){
+  if(!confirm('O\'chirishni tasdiqlaysizmi?'))return;
+  await sb.from('nikoh_bemorlar').delete().eq('id',id);
+  showAlert('✅ O\'chirildi!','ok');
+  await loadRecords();
+}
+
+function renderStats(){
+  const tot=allRecords.length;
+  const erk=allRecords.filter(r=>r.jinsi==='Erkak').length;
+  const ayl=allRecords.filter(r=>r.jinsi==='Ayol').length;
+  const yak=allRecords.filter(r=>r.yakun_sana).length;
+  document.getElementById('statsContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-n">${tot}</div><div class="stat-l">Jami</div></div>
+      <div class="stat"><div class="stat-n" style="color:#1565c0">${erk}</div><div class="stat-l">Erkak</div></div>
+      <div class="stat"><div class="stat-n" style="color:#c62828">${ayl}</div><div class="stat-l">Ayol</div></div>
+      <div class="stat"><div class="stat-n" style="color:#27ae60">${yak}</div><div class="stat-l">Yakunlangan</div></div>
+      <div class="stat"><div class="stat-n" style="color:#e67e22">${tot-yak}</div><div class="stat-l">Jarayonda</div></div>
+    </div>`;
+}
+
+async function exportExcel(){
+  if(!window.ExcelJS){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    document.head.appendChild(s);
+    await new Promise(r=>s.onload=r);
+  }
+  const wb=new ExcelJS.Workbook();
+  const ws=wb.addWorksheet("Nikoh Ko'rik");
+  const hS={font:{name:'Times New Roman',size:11,bold:true},fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FF1A5276'}},alignment:{horizontal:'center',vertical:'middle',wrapText:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}},font:{name:'Times New Roman',size:11,bold:true,color:{argb:'FFFFFFFF'}}};
+  const dS=(even)=>({font:{name:'Times New Roman',size:11},fill:{type:'pattern',pattern:'solid',fgColor:{argb:even?'FFFFFFFF':'FFF5F9FF'}},alignment:{horizontal:'center',vertical:'middle',wrapText:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}});
+  const headers=["№","Familya","Ism","Sharif","Tug'ilgan yili","Jinsi","MFY","JSHSHIR","Yo'llanma T/N","Telefon","Murojat sanasi","Yakunlangan sana"];
+  const hRow=ws.addRow(headers);
+  hRow.eachCell(c=>Object.assign(c,hS));
+  hRow.height=30;
+  allRecords.forEach((r,i)=>{
+    const row=ws.addRow([i+1,r.familya,r.ism,r.sharif,r.tugilgan_yil,r.jinsi,r.mfy,r.jshshir,r.yollanma,r.telefon,r.murojat_sana?fd(r.murojat_sana):'',r.yakun_sana?fd(r.yakun_sana):'']);
+    row.eachCell(c=>Object.assign(c,dS(i%2===0)));
+    row.height=20;
+  });
+  ws.columns=[{width:5},{width:16},{width:14},{width:16},{width:12},{width:8},{width:18},{width:16},{width:16},{width:14},{width:14},{width:14}];
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.href=url;
+  a.download="Nikoh_Korik_"+d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0')+".xlsx";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function exportHisobot(){
+  if(!window.ExcelJS){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    document.head.appendChild(s);
+    await new Promise(r=>s.onload=r);
+  }
+  const wb=new ExcelJS.Workbook();
+  const ws=wb.addWorksheet("Hisobot");
+  const hS=(bg)=>({font:{name:'Times New Roman',size:11,bold:true},fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FF'+bg}},alignment:{horizontal:'center',vertical:'middle'},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}});
+  const dS=()=>({font:{name:'Times New Roman',size:11},alignment:{horizontal:'center',vertical:'middle'},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}});
+  const h=ws.addRow(["Ko'rsatkich","Soni"]);
+  h.eachCell(c=>Object.assign(c,hS('1A5276')));
+  h.getCell(1).font={name:'Times New Roman',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+  h.getCell(2).font={name:'Times New Roman',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+  h.height=25;
+  const rows=[
+    ["Jami",allRecords.length],
+    ["Erkak",allRecords.filter(r=>r.jinsi==='Erkak').length],
+    ["Ayol",allRecords.filter(r=>r.jinsi==='Ayol').length],
+    ["Yakunlangan",allRecords.filter(r=>r.yakun_sana).length],
+    ["Jarayonda",allRecords.filter(r=>!r.yakun_sana).length],
+  ];
+  rows.forEach((rd,i)=>{
+    const row=ws.addRow(rd);
+    row.eachCell(c=>Object.assign(c,dS()));
+    row.height=22;
+  });
+  ws.columns=[{width:22},{width:10}];
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download="Nikoh_Hisobot_"+new Date().toISOString().split('T')[0]+".xlsx";
+  a.click();
+}
+</script>
+</body>
+</html>
