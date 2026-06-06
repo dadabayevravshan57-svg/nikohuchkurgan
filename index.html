@@ -139,15 +139,33 @@
     <div id="tabForm">
       <div class="card">
         <div class="section-title">📍 Joylashuv</div>
-        <div class="form-grid">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
           <div class="f">
-            <label>Viloyat</label>
-            <input id="viloyat" type="text" value="Namangan viloyati" readonly style="background:#f5f5f5">
+            <label>Viloyat *</label>
+            <select id="viloyat" onchange="onViloyatChange(this.value)">
+              <option value="Namangan viloyati">Namangan viloyati</option>
+              <option>Andijon viloyati</option>
+              <option>Farg'ona viloyati</option>
+              <option>Sirdaryo viloyati</option>
+              <option>Toshkent viloyati</option>
+              <option>Toshkent shahri</option>
+              <option>Samarqand viloyati</option>
+              <option>Buxoro viloyati</option>
+              <option>Qashqadaryo viloyati</option>
+              <option>Surxondaryo viloyati</option>
+              <option>Xorazm viloyati</option>
+              <option>Navoiy viloyati</option>
+              <option>Jizzax viloyati</option>
+              <option>Qoraqalpog'iston Respublikasi</option>
+            </select>
           </div>
           <div class="f">
-            <label>Tuman</label>
-            <input id="tuman" type="text" value="Uchqo'rg'on tumani" readonly style="background:#f5f5f5">
+            <label>Tuman *</label>
+            <select id="tuman">
+              <option value="Uchqo'rg'on tumani">Uchqo'rg'on tumani</option>
+            </select>
           </div>
+
         </div>
 
         <div class="section-title">👤 Shaxsiy ma'lumotlar</div>
@@ -178,32 +196,7 @@
               <option>Ayol</option>
             </select>
           </div>
-          <div class="f">
-            <label>MFY *</label>
-            <select id="mfy">
-              <option value="">— Tanlang —</option>
-              <option>Chek</option><option>Ulug'bek</option><option>Yoshlik</option>
-              <option>Ko'g'ay</option><option>Islomobod</option><option>Uchyog'och</option>
-              <option>Navro'z</option><option>Nurobod</option><option>Namuna</option>
-              <option>Birlik</option><option>Shahrihonchek</option><option>Ko'g'ay o'lmas</option>
-              <option>Yorqinboychek</option><option>Bahriyobod</option><option>Obod</option>
-              <option>Ozod</option><option>Yangiobod</option><option>Norin</option>
-              <option>Navbahor</option><option>Istiqlol</option><option>Yopisxon</option>
-              <option>Katta Chek</option><option>Qozoqovul</option><option>Baxt</option>
-              <option>Xalfato'pi</option><option>Yashiq</option><option>Eshonto'pi</option>
-              <option>Atlas</option><option>Elatan</option><option>Ko'chaboshi</option>
-              <option>Yangiyer</option><option>Guliston</option><option>Bo'ston</option>
-              <option>Yog'du</option><option>Dehqonobod</option><option>Mehnatobod</option>
-              <option>Uchko'prik</option><option>Paxtachi</option><option>Qo'rg'oncha</option>
-              <option>Madaniyat</option><option>Ko'prikboshi</option><option>Qumto'g'on</option>
-              <option>Sohil</option><option>O'rdabog'</option><option>Turkiston</option>
-              <option>Yorqin hayot</option><option>Sanoat</option><option>Farg'ona</option>
-              <option>Shodlik</option><option>Fayziobod</option><option>Oqtovliq</option>
-              <option>Navoiy</option><option>Farovon</option><option>Sholdirma</option>
-              <option>Mustaqillik</option><option>Tegirmon</option><option>Kattamo'g'ol</option>
-              <option>Tinchlik</option><option>Istiqbol</option><option>Yangi hayot</option><option>Qurama</option>
-            </select>
-          </div>
+
           <div class="f">
             <label>JSHSHIR * (14 raqam)</label>
             <input id="jshshir" type="text" placeholder="00000000000000" maxlength="14"
@@ -300,6 +293,38 @@ const ZAPAS = 'R_993276013ser';
 let currentRole = '';
 let allRecords = [];
 let loginType = 'xodim';
+
+const TUMANLAR = {
+  "Namangan viloyati": ["Namangan shahri","Chortoq tumani","Chust tumani","Kosonsoy tumani","Mingbuloq tumani","Namangan tumani","Norin tumani","Pop tumani","To'raqo'rg'on tumani","Uchqo'rg'on tumani","Uychi tumani","Yangiqo'rg'on tumani"],
+  "Andijon viloyati": ["Andijon shahri","Asaka tumani","Baliqchi tumani","Bo'z tumani","Buloqboshi tumani","Izboskan tumani","Jalolquduq tumani","KO'hna tumani","Marhamat tumani","Oltinko'l tumani","Paxtaobod tumani","Qo'rg'ontepa tumani","Shahrixon tumani","Ulug'nor tumani","Xo'jaobod tumani"],
+  "Farg'ona viloyati": ["Farg'ona shahri","Qo'qon shahri","Marg'ilon shahri","Oltiariq tumani","Bag'dod tumani","Beshariq tumani","Buvayda tumani","Dang'ara tumani","Furqat tumani","Qo'shtepa tumani","Quva tumani","Rishton tumani","So'x tumani","Toshloq tumani","Uchko'prik tumani","O'zbekiston tumani","Yozyovon tumani"],
+  "Toshkent viloyati": ["Nurafshon shahri","Angren shahri","Bekobod shahri","Chirchiq shahri","Ohangaron shahri","Bo'ka tumani","Bo'stonliq tumani","Chinoz tumani","Quyichirchiq tumani","O'rtachirchiq tumani","Oqqo'rg'on tumani","Parkent tumani","Piskent tumani","Toshkent tumani","Yuqorichirchiq tumani","Zangiota tumani","Zangota tumani"],
+  "Toshkent shahri": ["Bektemir tumani","Chilonzor tumani","Hamza tumani","Mirobod tumani","Mirzo Ulug'bek tumani","Olmazor tumani","Sergeli tumani","Shayxontohur tumani","Uchtepa tumani","Yakkasaroy tumani","Yashnobod tumani","Yunusobod tumani"],
+  "Samarqand viloyati": ["Samarqand shahri","Bulung'ur tumani","Ishtixon tumani","Jomboy tumani","Kattaqo'rg'on shahri","Narpay tumani","Nurobod tumani","Oqdaryo tumani","Payariq tumani","Pastdarg'om tumani","Paxtachi tumani","Qo'shrabot tumani","Toyloq tumani","Urgut tumani"],
+  "Buxoro viloyati": ["Buxoro shahri","G'ijduvon tumani","Jondor tumani","Kogon shahri","Qorovulbozor tumani","Romitan tumani","Shofirkon tumani","Vobkent tumani","Olot tumani","Peshku tumani"],
+  "Qashqadaryo viloyati": ["Qarshi shahri","Chiroqchi tumani","G'uzor tumani","Kasbi tumani","Kitob tumani","Koson tumani","Mirishkor tumani","Muborak tumani","Nishon tumani","Qamashi tumani","Shahrisabz shahri","Yakkabog' tumani"],
+  "Surxondaryo viloyati": ["Termiz shahri","Angor tumani","Bandixon tumani","Boysun tumani","Denov tumani","Jarqo'rg'on tumani","Muzrabot tumani","Oltinsoy tumani","Qiziriq tumani","Qumqo'rg'on tumani","Sariosiyo tumani","Sherobod tumani","Sho'rchi tumani","Uzun tumani"],
+  "Xorazm viloyati": ["Urganch shahri","Bog'ot tumani","Gurlan tumani","Xiva shahri","Xonqa tumani","Qo'shko'pir tumani","Shovot tumani","Tuproqqal'a tumani","Urganch tumani","Yangiariq tumani","Yangibozor tumani"],
+  "Navoiy viloyati": ["Navoiy shahri","Zarafshon shahri","Karmana tumani","Konimex tumani","Navbahor tumani","Nurota tumani","Qiziltepa tumani","Tomdi tumani","Uchquduq tumani","Xatirchi tumani"],
+  "Jizzax viloyati": ["Jizzax shahri","Arnasoy tumani","Baxmal tumani","Do'stlik tumani","Forish tumani","G'allaorol tumani","Mirzacho'l tumani","Paxtakor tumani","Sharof Rashidov tumani","Yangiobod tumani","Zafarobod tumani","Zomin tumani"],
+  "Sirdaryo viloyati": ["Guliston shahri","Boyovut tumani","Guliston tumani","Mirzaobod tumani","Oqoltin tumani","Sardoba tumani","Sayxunobod tumani","Shirin shahri","Xovos tumani"],
+  "Qoraqalpog'iston Respublikasi": ["Nukus shahri","Amudaryo tumani","Beruniy tumani","Chimboy tumani","Ellikkala tumani","Kegeyli tumani","Mo'ynoq tumani","Nukus tumani","Qanliko'l tumani","Qo'ng'irot tumani","Qorao'zak tumani","Shumanay tumani","Taxtako'pir tumani","To'rtko'l tumani","Xo'jayli tumani"]
+};
+
+function onViloyatChange(val){
+  const tumanSel = document.getElementById('tuman');
+  tumanSel.innerHTML = '';
+  const tumanlar = TUMANLAR[val] || [];
+  tumanlar.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    if(t === "Uchqo'rg'on tumani") opt.selected = true;
+    tumanSel.appendChild(opt);
+  });
+}
+
+// Init tumanlar on load
+window.addEventListener('load', ()=>{ onViloyatChange("Namangan viloyati"); });
 
 function jshshirAutoFill(val){
   const hint = document.getElementById('jshshirHint');
@@ -463,7 +488,7 @@ async function saveRecord(){
   }
 
   const rec={
-    viloyat:'Namangan viloyati', tuman:"Uchqo'rg'on tumani",
+    viloyat:gv('viloyat'), tuman:gv('tuman'),
     familya:gv('familya'), ism:gv('ism'), sharif:gv('sharif'),
     tugilgan_yil:gv('tugilganYil')?parseInt(gv('tugilganYil').split('.')[2])||null:null,
     tugilgan_sana:gv('tugilganYil')||null,
@@ -514,8 +539,10 @@ async function editRecord(id){
   if(!r)return;
   showTab('form');
   document.querySelectorAll('.tab')[0].click();
-  document.getElementById('viloyat').value=r.viloyat||'Namangan viloyati';
-  document.getElementById('tuman').value=r.tuman||"Uchqo'rg'on tumani";
+  const vilEl=document.getElementById('viloyat');
+  vilEl.value=r.viloyat||'Namangan viloyati';
+  onViloyatChange(vilEl.value);
+  setTimeout(()=>{ document.getElementById('tuman').value=r.tuman||"Uchqo'rg'on tumani"; },50);
   document.getElementById('familya').value=r.familya||'';
   document.getElementById('ism').value=r.ism||'';
   document.getElementById('sharif').value=r.sharif||'';
