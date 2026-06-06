@@ -153,8 +153,10 @@
             <input id="sharif" type="text" placeholder="Sharif">
           </div>
           <div class="f">
-            <label>Tug'ilgan yili *</label>
-            <input id="tugilganYil" type="number" placeholder="1990" min="1900" max="2010">
+            <label>Tug'ilgan sana *</label>
+            <input id="tugilganYil" type="text" placeholder="KK.OO.YYYY" readonly
+              style="background:#f5f5f5;cursor:not-allowed">
+            <div id="jshshirHint" style="font-size:11px;min-height:16px;margin-top:2px"></div>
           </div>
           <div class="f">
             <label>Jinsi *</label>
@@ -193,7 +195,7 @@
           <div class="f">
             <label>JSHSHIR * (14 raqam)</label>
             <input id="jshshir" type="text" placeholder="00000000000000" maxlength="14"
-              oninput="this.value=this.value.replace(/\D/g,'')">
+              oninput="this.value=this.value.replace(/\D/g,'');jshshirAutoFill(this.value)">
           </div>
           <div class="f">
             <label>FXDYO Yo'llanma T/N</label>
@@ -244,7 +246,7 @@
               <tr>
                 <th>#</th>
                 <th>F.I.Sh</th>
-                <th>Tug'ilgan yili</th>
+                <th>Tug'ilgan sana</th>
                 <th>Jinsi</th>
                 <th>MFY</th>
                 <th>JSHSHIR</th>
@@ -286,6 +288,27 @@ const ZAPAS = 'R_993276013ser';
 let currentRole = '';
 let allRecords = [];
 let loginType = 'xodim';
+
+function jshshirAutoFill(val){
+  const hint = document.getElementById('jshshirHint');
+  const sanEl = document.getElementById('tugilganYil');
+  if(val.length < 14){
+    hint.textContent = val.length > 0 ? val.length+'/14 raqam kiritildi' : '';
+    hint.style.color = '#e74c3c';
+    sanEl.value = '';
+    return;
+  }
+  // JSHSHIR dan: 2-3=kun, 4-5=oy, 6-7=yil
+  const kun = val.substring(1,3);
+  const oy  = val.substring(3,5);
+  const yilKisqa = val.substring(5,7);
+  const yilToMn = parseInt(yilKisqa) <= 30 ? '20' : '19';
+  const yilToliq = yilToMn + yilKisqa;
+  const sana = kun+'.'+oy+'.'+yilToliq;
+  sanEl.value = sana;
+  hint.textContent = "✅ Tug'ilgan: "+sana;
+  hint.style.color = '#27ae60';
+}
 
 function setRole(r, el){
   loginType = r;
@@ -399,7 +422,7 @@ function renderPage(){
     <tr>
       <td>${_page*PAGE+i+1}</td>
       <td><strong>${r.familya||''} ${r.ism||''}</strong><br><small style="color:#888">${r.sharif||''}</small></td>
-      <td>${r.tugilgan_yil||'—'}</td>
+      <td>${r.tugilgan_sana||r.tugilgan_sana||r.tugilgan_yil||'—'}</td>
       <td><span class="badge-${r.jinsi==='Erkak'?'erkak':'ayol'}">${r.jinsi||'—'}</span></td>
       <td style="font-size:11px">${r.mfy||'—'}</td>
       <td style="font-size:11px;font-family:monospace">${r.jshshir||'—'}</td>
@@ -427,7 +450,8 @@ async function saveRecord(){
 
   const rec={
     familya:gv('familya'), ism:gv('ism'), sharif:gv('sharif'),
-    tugilgan_yil:parseInt(gv('tugilganYil'))||null,
+    tugilgan_yil:gv('tugilganYil')?parseInt(gv('tugilganYil').split('.')[2])||null:null,
+    tugilgan_sana:gv('tugilganYil')||null,
     jinsi:gv('jinsi'), mfy:gv('mfy'),
     jshshir:gv('jshshir')||null,
     yollanma:gv('yollanma')||null,
@@ -456,6 +480,7 @@ async function saveRecord(){
 }
 
 function clearForm(){
+  document.getElementById('jshshirHint').textContent='';
   ['familya','ism','sharif','tugilganYil','jshshir','yollanma','telefon','yakunSana'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.value='';
@@ -477,7 +502,7 @@ async function editRecord(id){
   document.getElementById('familya').value=r.familya||'';
   document.getElementById('ism').value=r.ism||'';
   document.getElementById('sharif').value=r.sharif||'';
-  document.getElementById('tugilganYil').value=r.tugilgan_yil||'';
+  document.getElementById('tugilganYil').value=r.tugilgan_sana||r.tugilgan_yil||'';
   document.getElementById('jinsi').value=r.jinsi||'';
   document.getElementById('mfy').value=r.mfy||'';
   document.getElementById('jshshir').value=r.jshshir||'';
@@ -530,7 +555,7 @@ async function exportExcel(){
   hRow.eachCell(c=>Object.assign(c,hS));
   hRow.height=30;
   allRecords.forEach((r,i)=>{
-    const row=ws.addRow([i+1,r.familya,r.ism,r.sharif,r.tugilgan_yil,r.jinsi,r.mfy,r.jshshir,r.yollanma,r.telefon,r.murojat_sana?fd(r.murojat_sana):'',r.yakun_sana?fd(r.yakun_sana):'']);
+    const row=ws.addRow([i+1,r.familya,r.ism,r.sharif,r.tugilgan_sana||r.tugilgan_yil,r.jinsi,r.mfy,r.jshshir,r.yollanma,r.telefon,r.murojat_sana?fd(r.murojat_sana):'',r.yakun_sana?fd(r.yakun_sana):'']);
     row.eachCell(c=>Object.assign(c,dS(i%2===0)));
     row.height=20;
   });
