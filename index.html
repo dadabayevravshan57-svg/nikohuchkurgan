@@ -138,6 +138,18 @@
     <!-- FORM TAB -->
     <div id="tabForm">
       <div class="card">
+        <div class="section-title">📍 Joylashuv</div>
+        <div class="form-grid">
+          <div class="f">
+            <label>Viloyat</label>
+            <input id="viloyat" type="text" value="Namangan viloyati" readonly style="background:#f5f5f5">
+          </div>
+          <div class="f">
+            <label>Tuman</label>
+            <input id="tuman" type="text" value="Uchqo'rg'on tumani" readonly style="background:#f5f5f5">
+          </div>
+        </div>
+
         <div class="section-title">👤 Shaxsiy ma'lumotlar</div>
         <div class="form-grid">
           <div class="f">
@@ -245,7 +257,7 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>F.I.Sh</th>
+                <th>Viloyat</th><th>Tuman</th><th>F.I.Sh</th>
                 <th>Tug'ilgan sana</th>
                 <th>Jinsi</th>
                 <th>MFY</th>
@@ -421,6 +433,8 @@ function renderPage(){
   body.innerHTML=slice.map((r,i)=>`
     <tr>
       <td>${_page*PAGE+i+1}</td>
+      <td style='font-size:11px'>${r.viloyat||'Namangan viloyati'}</td>
+      <td style='font-size:11px'>${r.tuman||"Uchqo'rg'on tumani"}</td>
       <td><strong>${r.familya||''} ${r.ism||''}</strong><br><small style="color:#888">${r.sharif||''}</small></td>
       <td>${r.tugilgan_sana||r.tugilgan_sana||r.tugilgan_yil||'—'}</td>
       <td><span class="badge-${r.jinsi==='Erkak'?'erkak':'ayol'}">${r.jinsi||'—'}</span></td>
@@ -449,6 +463,7 @@ async function saveRecord(){
   }
 
   const rec={
+    viloyat:'Namangan viloyati', tuman:"Uchqo'rg'on tumani",
     familya:gv('familya'), ism:gv('ism'), sharif:gv('sharif'),
     tugilgan_yil:gv('tugilganYil')?parseInt(gv('tugilganYil').split('.')[2])||null:null,
     tugilgan_sana:gv('tugilganYil')||null,
@@ -499,6 +514,8 @@ async function editRecord(id){
   if(!r)return;
   showTab('form');
   document.querySelectorAll('.tab')[0].click();
+  document.getElementById('viloyat').value=r.viloyat||'Namangan viloyati';
+  document.getElementById('tuman').value=r.tuman||"Uchqo'rg'on tumani";
   document.getElementById('familya').value=r.familya||'';
   document.getElementById('ism').value=r.ism||'';
   document.getElementById('sharif').value=r.sharif||'';
@@ -550,12 +567,12 @@ async function exportExcel(){
   const ws=wb.addWorksheet("Nikoh Ko'rik");
   const hS={font:{name:'Times New Roman',size:11,bold:true},fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FF1A5276'}},alignment:{horizontal:'center',vertical:'middle',wrapText:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}},font:{name:'Times New Roman',size:11,bold:true,color:{argb:'FFFFFFFF'}}};
   const dS=(even)=>({font:{name:'Times New Roman',size:11},fill:{type:'pattern',pattern:'solid',fgColor:{argb:even?'FFFFFFFF':'FFF5F9FF'}},alignment:{horizontal:'center',vertical:'middle',wrapText:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}});
-  const headers=["№","Familya","Ism","Sharif","Tug'ilgan yili","Jinsi","MFY","JSHSHIR","Yo'llanma T/N","Telefon","Murojat sanasi","Yakunlangan sana"];
+  const headers=["№","Viloyat","Tuman","Familya","Ism","Sharif","Tug'ilgan yili","Jinsi","MFY","JSHSHIR","Yo'llanma T/N","Telefon","Murojat sanasi","Yakunlangan sana"];
   const hRow=ws.addRow(headers);
   hRow.eachCell(c=>Object.assign(c,hS));
   hRow.height=30;
   allRecords.forEach((r,i)=>{
-    const row=ws.addRow([i+1,r.familya,r.ism,r.sharif,r.tugilgan_sana||r.tugilgan_yil,r.jinsi,r.mfy,r.jshshir,r.yollanma,r.telefon,r.murojat_sana?fd(r.murojat_sana):'',r.yakun_sana?fd(r.yakun_sana):'']);
+    const row=ws.addRow([i+1,r.viloyat||'Namangan viloyati',r.tuman||"Uchqo'rg'on tumani",r.familya,r.ism,r.sharif,r.tugilgan_sana||r.tugilgan_yil,r.jinsi,r.mfy,r.jshshir,r.yollanma,r.telefon,r.murojat_sana?fd(r.murojat_sana):'',r.yakun_sana?fd(r.yakun_sana):'']);
     row.eachCell(c=>Object.assign(c,dS(i%2===0)));
     row.height=20;
   });
